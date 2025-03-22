@@ -25,15 +25,4 @@
     <ItemGroup>
       <Content Include="obj\Debug\net8.0-android\Avalonia\Avalonia\Resources.Inputs.cache" />
     </ItemGroup>
-<!--    <Target Name="CopyAssets" AfterTargets="Build">-->
-<!--        <ItemGroup>-->
-<!--            &lt;!&ndash; Specify the source directory &ndash;&gt;-->
-<!--            <SourceFiles Include="obj\Debug\net8.0-android\Avalonia\**\*"/>-->
-<!--        </ItemGroup>-->
-
-<!--        <Copy-->
-<!--                SourceFiles="@(SourceFiles)"-->
-<!--                DestinationFolder="build\Assets\%(RecursiveDir)"-->
-<!--                SkipUnchangedFiles="true" />-->
-<!--    </Target>-->
 </Project>
