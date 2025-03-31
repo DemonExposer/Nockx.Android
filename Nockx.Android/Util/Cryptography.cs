@@ -27,7 +27,7 @@ public static class Cryptography {
 	}
 
 	public static byte[] DecryptAesKey(byte[] encryptedAesKey, RsaKeyParameters rsaPrivateKey) {
-		OaepEncoding rsaEngine = new(new RsaEngine());
+		OaepEncoding rsaEngine = new (new RsaEngine());
 		rsaEngine.Init(false, rsaPrivateKey);
 		return rsaEngine.ProcessBlock(encryptedAesKey, 0, encryptedAesKey.Length);
 	}

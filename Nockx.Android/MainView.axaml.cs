@@ -3,17 +3,15 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Nockx.Android.ClassExtensions;
 using Org.BouncyCastle.Crypto.Parameters;
-using static Android.Preferences.PreferenceActivity;
-using System.Text.Json;
-using LessAnnoyingHttp;
 using Header = LessAnnoyingHttp.Header;
-using System.Text.Json.Nodes;
 using Nockx.Android.Util;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using System.Net;
 using System.Text;
+using System.Web;
+using Org.BouncyCastle.Asn1.Pkcs;
 
 namespace Nockx.Android;
 
@@ -42,36 +40,37 @@ public partial class MainView : Panel {
 	private async Task ScanQrCode() {
 		try {
 			string? result = await MainActivity.Instance!.ScanQrCode();
-			_someThing.Text = result;
 			RsaKeyParameters foreignKey = RsaKeyParametersExtension.FromBase64String(result);
-			Console.WriteLine("id: {0}", SendMessage("hoi", foreignKey));
+			RequestPrivateKey(foreignKey);
+
+			result = await MainActivity.Instance!.ScanQrCode();
+			Console.WriteLine(result);
+			byte[] resultBytes = Convert.FromBase64String(result);
+			byte[] encryptedAesKey = new byte[256];
+			byte[] encryptedPrivateKey = new byte[resultBytes.Length - 256];
+
+			Buffer.BlockCopy(resultBytes, 0, encryptedAesKey, 0, 256);
+			Buffer.BlockCopy(resultBytes, 256, encryptedPrivateKey, 0, encryptedPrivateKey.Length);
+
+			byte[] aesKey = Cryptography.DecryptAesKey(encryptedAesKey, _privateKey);
+			(byte[] newPrivateKeyBytes, int newPrivateKeyLength) = Cryptography.DecryptWithAes(encryptedPrivateKey, aesKey);
+			RsaKeyParameters newPrivateKey = (RsaKeyParameters) PrivateKeyFactory.CreateKey(PrivateKeyInfo.GetInstance(newPrivateKeyBytes[..newPrivateKeyLength]));
+			RsaKeyParameters newPublicKey = new (false, newPrivateKey.Modulus, newPrivateKey.Exponent);
+
+			Console.WriteLine(newPublicKey.ToBase64String());
+			_someThing.Text = newPublicKey.ToBase64String();
 		} catch (Exception e) {
 			Console.WriteLine(e);
 		}
 	}
 
-	public long SendMessage(string message, RsaKeyParameters foreignPublicKey) {
-		Message encryptedMessage = Cryptography.Encrypt(message, _personalPublicKey, foreignPublicKey, _privateKey);
-		JsonObject body = new() {
-			["sender"] = new JsonObject {
-				["key"] = _personalPublicKey.ToBase64String(),
-				["displayName"] = _personalPublicKey.ToBase64String()
-			},
-			["receiver"] = new JsonObject {
-				["key"] = foreignPublicKey.ToBase64String(),
-				["displayName"] = ""
-			},
-			["text"] = encryptedMessage.Body,
-			["senderEncryptedKey"] = encryptedMessage.SenderEncryptedKey,
-			["receiverEncryptedKey"] = encryptedMessage.ReceiverEncryptedKey,
-			["signature"] = encryptedMessage.Signature,
-			["timestamp"] = encryptedMessage.Timestamp
-		};
-
-		string bodyString = JsonSerializer.Serialize(body);
-		Response response = Post($"https://...:5000/messages", bodyString, [new Header { Name = "Signature", Value = Cryptography.Sign(bodyString, _privateKey) }]);
+	public bool RequestPrivateKey(RsaKeyParameters foreignPublicKey) {
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+		string getVariables = $"requestingUser={HttpUtility.UrlEncode(_personalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(foreignPublicKey.ToBase64String())}&timestamp={timestamp}";
+		Response response = Get($"https://...:5000/privateKeyRequest?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
 		Console.WriteLine("{0} {1}", response.StatusCode, response.Exception);
-		return long.Parse(response.Body);
+
+		return response.StatusCode == HttpStatusCode.OK;
 	}
 
 	private class Response {
@@ -96,6 +95,30 @@ public partial class MainView : Panel {
 		public Exception? Exception { get; internal init; }
 
 		internal Response() { }
+	}
+
+	private static Response Get(string endpoint, Header[]? headers = null) {
+		using HttpClient client = new();
+		client.Timeout = TimeSpan.FromSeconds(10000);
+		HttpRequestMessage request = new() {
+			RequestUri = new Uri(endpoint),
+			Method = HttpMethod.Get
+		};
+
+		if (headers != null)
+			foreach (Header header in headers)
+				request.Headers.Add(header.Name, header.Value);
+
+		HttpResponseMessage response;
+		try {
+			response = client.SendAsync(request).Result;
+		} catch (TaskCanceledException) {
+			throw new TimeoutException($"Timeout waiting for response for request to {endpoint}");
+		} catch (Exception e) {
+			return new Response { IsSuccessful = false, Body = "", Exception = e };
+		}
+
+		return new Response { IsSuccessful = response.IsSuccessStatusCode, Body = response.Content.ReadAsStringAsync().Result, StatusCode = response.StatusCode };
 	}
 
 	private static Response BodyRequest(string endpoint, HttpMethod method, string body, Header[]? headers, string contentType) {
