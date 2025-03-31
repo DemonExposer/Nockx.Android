@@ -1,24 +1,38 @@
+using Android.Content;
 using Android.Content.PM;
+using Android.Runtime;
 using Avalonia.Android;
-using Avalonia.Controls;
-using Xamarin.Essentials;
-using ZXing.Mobile;
-using Result = ZXing.Result;
 
 namespace Nockx.Android;
 
 [Activity(Label = "@string/app_name", Theme = "@style/MyTheme.NoActionBar", MainLauncher = true, 
 	ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-public class MainActivity : Activity {
-	protected override async void OnCreate(Bundle? bundle) {
-		base.OnCreate(bundle);
-		Platform.Init(this, bundle);
-		
-		MobileBarcodeScanner scanner = new ();
-		Result result = await scanner.Scan();
+public class MainActivity : AvaloniaMainActivity<App> {
+	public static MainActivity? Instance { get; private set; }
 
-		if (result != null) {
-			Console.WriteLine("code: {0}", result.Text);
+	private const int RequestCode = 1001;
+	private TaskCompletionSource<string?>? _resultTaskCompletionSource;
+
+	protected override void OnCreate(Bundle? savedInstanceState) {
+		base.OnCreate(savedInstanceState);
+		Instance = this;
+	}
+
+	public Task<string?> ScanQrCode() {
+		_resultTaskCompletionSource = new TaskCompletionSource<string?>();
+		Intent intent = new (this, typeof(QrActivity));
+		StartActivityForResult(intent, RequestCode);
+		return _resultTaskCompletionSource.Task;
+	}
+
+	protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent? data) {
+		base.OnActivityResult(requestCode, resultCode, data);
+
+		if (requestCode == RequestCode && resultCode == Result.Ok && data != null) {
+			string? result = data.GetStringExtra("resultData");
+			_resultTaskCompletionSource?.SetResult(result);
+		} else {
+			_resultTaskCompletionSource?.TrySetResult(null);
 		}
 	}
 }

@@ -4,7 +4,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	x:Class="Nockx.Android.MainView">
 	<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-		<TextBlock Foreground="White">Hello!</TextBlock>
+		<TextBlock Foreground="White" Name="SomeThing">Hello!</TextBlock>
 		<Button Foreground="White" Click="Button_Click">Click me!</Button>
 	</StackPanel>
 </Panel>
