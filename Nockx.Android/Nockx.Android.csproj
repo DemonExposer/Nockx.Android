@@ -19,7 +19,7 @@
       <PackageReference Include="Avalonia.Android" Version="11.3.999-cibuild0055802-alpha" />
       <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.5" />
       <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
-      <PackageReference Include="LessAnnoyingHttp" Version="1.1.0" />
+      <PackageReference Include="LessAnnoyingHttp" Version="1.1.1" />
       <PackageReference Include="ZXing.Net.Mobile" Version="3.1.0-beta2" />
     </ItemGroup>
 </Project>
