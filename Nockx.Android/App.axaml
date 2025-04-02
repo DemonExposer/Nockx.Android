@@ -1,9 +1,118 @@
 <Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Nockx.Android.App"
-             RequestedThemeVariant="Default"
-             Name="Nockx">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="Nockx.Android.App"
+			 RequestedThemeVariant="Default"
+			 Name="Nockx">
+	<Application.Resources>
+		<SolidColorBrush x:Key="ApplicationBackgroundColor" Color="#2B2B2B"/>
+	</Application.Resources>
+
 	<Application.Styles>
-		<FluentTheme />
+		<Style Selector="Button">
+			<Setter Property="Foreground" Value="#A0A0A0"/>
+		</Style>
+		<Style Selector="Button:pointerover /template/ ContentPresenter">
+			<Setter Property="Foreground" Value="#A0A0A0"/>
+		</Style>
+		<Style Selector="Button:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="#181818"/>
+		</Style>
+
+		<Style Selector="Button.selected /template/ ContentPresenter">
+			<Setter Property="Background" Value="#181818"/>
+		</Style>
+		<Style Selector="Button.selected:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#181818"/>
+		</Style>
+
+		<Style Selector="Button.accept">
+			<Setter Property="Background" Value="#00C000"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.accept:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#80C080"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.accept:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="#006000"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.chat_selector">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Width" Value="200"/>
+		</Style>
+
+		<Style Selector="Button.chat_selector">
+			<Setter Property="ContentTemplate">
+				<DataTemplate>
+					<DockPanel LastChildFill="True">
+						<TextBlock DockPanel.Dock="Right" Name="IsReadStatusTextBlock" Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=Button}}"/>
+						<TextBlock Name="NameTextBlock" Text="{Binding Content, RelativeSource={RelativeSource AncestorType=Button}}"/>
+					</DockPanel>
+				</DataTemplate>
+			</Setter>
+		</Style>
+
+		<Style Selector="Button.cancel">
+			<Setter Property="Background" Value="Orange"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.cancel:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#FFCC00"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.cancel:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="#996100"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.reject">
+			<Setter Property="Background" Value="Red"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.reject:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#FF5050"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.reject:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="DarkRed"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.settings">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Width" Value="200"/>
+		</Style>
+		<Style Selector="Button.settings:pointerover /template/ ContentPresenter">
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.settings:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+
+		<Style Selector="TextBox">
+			<Setter Property="Width" Value="500"/>
+			<Setter Property="HorizontalAlignment" Value="Left"/>
+			<Setter Property="Margin" Value="10"/>
+		</Style>
+
+		<Style Selector="MenuItem.delete_menu_item">
+			<Setter Property="Foreground" Value="#FF0000"/>
+		</Style>
+
+		<Style Selector="MenuItem.delete_menu_item:pointerover /template/ ContentPresenter">
+			<Setter Property="Foreground" Value="#FF0000"/>
+		</Style>
+
+		<FluentTheme/>
 	</Application.Styles>
+
 </Application>

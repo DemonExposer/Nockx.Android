@@ -12,20 +12,18 @@ using System.Net;
 using System.Web;
 using Org.BouncyCastle.Asn1.Pkcs;
 using LessAnnoyingHttp;
+using Org.BouncyCastle.OpenSsl;
 
 namespace Nockx.Android;
 
-public partial class MainView : Panel {
-	private readonly TextBlock _someThing;
+public partial class KeyDeciderView : Panel {
 	private readonly RsaKeyParameters _privateKey, _personalPublicKey;
 
-	public MainView() {
+	public KeyDeciderView() {
 		AvaloniaXamlLoader.Load(this);
 
-		_someThing = this.FindControl<TextBlock>("SomeThing")!;
-
 		RsaKeyPairGenerator rsaGenerator = new ();
-		rsaGenerator.Init(new KeyGenerationParameters(new SecureRandom(), 2048));
+		rsaGenerator.Init(new KeyGenerationParameters(new SecureRandom(), Constants.KEY_SIZE_BITS));
 
 		AsymmetricCipherKeyPair keyPair = rsaGenerator.GenerateKeyPair();
 
@@ -33,7 +31,11 @@ public partial class MainView : Panel {
 		_personalPublicKey = (RsaKeyParameters) keyPair.Public;
 	}
 
-	public void Button_Click(object? sender, RoutedEventArgs e) {
+	public void CreateButton_OnClick(object? sender, RoutedEventArgs e) {
+		
+	}
+
+	public void ImportButton_OnClick(object? sender, RoutedEventArgs e) {
 		_ = ScanQrCode();
 	}
 
@@ -44,7 +46,7 @@ public partial class MainView : Panel {
 			RequestPrivateKey(foreignKey);
 
 			result = await MainActivity.Instance!.ScanQrCode();
-			Console.WriteLine(result);
+
 			byte[] resultBytes = Convert.FromBase64String(result);
 			byte[] encryptedAesKey = new byte[256];
 			byte[] encryptedPrivateKey = new byte[resultBytes.Length - 256];
@@ -57,8 +59,17 @@ public partial class MainView : Panel {
 			RsaKeyParameters newPrivateKey = (RsaKeyParameters) PrivateKeyFactory.CreateKey(PrivateKeyInfo.GetInstance(newPrivateKeyBytes[..newPrivateKeyLength]));
 			RsaKeyParameters newPublicKey = new (false, newPrivateKey.Modulus, newPrivateKey.Exponent);
 
-			Console.WriteLine(newPublicKey.ToBase64String());
-			_someThing.Text = newPublicKey.ToBase64String();
+			using (TextWriter textWriter = new StreamWriter(Constants.PrivateKeyFile)) {
+				PemWriter pemWriter = new (textWriter);
+				pemWriter.WriteObject(newPrivateKey);
+				pemWriter.Writer.Flush();
+			}
+
+			using (TextWriter textWriter = new StreamWriter(Constants.PublicKeyFile)) {
+				PemWriter pemWriter = new (textWriter);
+				pemWriter.WriteObject(newPublicKey);
+				pemWriter.Writer.Flush();
+			}
 		} catch (Exception e) {
 			Console.WriteLine(e);
 		}
@@ -68,7 +79,6 @@ public partial class MainView : Panel {
 		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string getVariables = $"requestingUser={HttpUtility.UrlEncode(_personalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(foreignPublicKey.ToBase64String())}&timestamp={timestamp}";
 		Response response = Http.Get($"https://...:5000/privateKeyRequest?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
-		Console.WriteLine("{0} {1}", response.StatusCode, response.Exception);
 
 		return response.StatusCode == HttpStatusCode.OK;
 	}
