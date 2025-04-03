@@ -1,0 +1,23 @@
+<Panel xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	x:Class="Nockx.Android.MainView"
+	Background="#2B2B2B">
+	<DockPanel>
+		<DockPanel DockPanel.Dock="Left" Width="200">
+			<StackPanel DockPanel.Dock="Bottom">
+				<Button Name="UserInfoButton" Content="User info" Classes="chat_selector"/>
+				<Button Name="SettingsButton" Content="Settings" Classes="settings"/>
+			</StackPanel>
+			<StackPanel Name="ChatListPanel" Width="200">
+				<Button Name="FriendsButton" Content="Friends" Classes="chat_selector"/>
+				<Button Name="AddChatButton" Content="New Chat" Classes="chat_selector"/>
+				<Button Name="AddFriendButton" Content="New Friend" Classes="chat_selector"/>
+			</StackPanel>
+		</DockPanel>
+		<DockPanel Name="MainPanel">
+		
+		</DockPanel>
+	</DockPanel>
+</Panel>

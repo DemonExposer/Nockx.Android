@@ -32,7 +32,7 @@ public partial class KeyDeciderView : Panel {
 	}
 
 	public void CreateButton_OnClick(object? sender, RoutedEventArgs e) {
-		
+		File.WriteAllText(Path.Combine(Application.Context.FilesDir!.AbsolutePath, "key_selected"), "true");
 	}
 
 	public void ImportButton_OnClick(object? sender, RoutedEventArgs e) {
@@ -70,6 +70,8 @@ public partial class KeyDeciderView : Panel {
 				pemWriter.WriteObject(newPublicKey);
 				pemWriter.Writer.Flush();
 			}
+
+			File.WriteAllText(Path.Combine(Application.Context.FilesDir!.AbsolutePath, "key_selected"), "true");
 		} catch (Exception e) {
 			Console.WriteLine(e);
 		}
@@ -78,7 +80,7 @@ public partial class KeyDeciderView : Panel {
 	public bool RequestPrivateKey(RsaKeyParameters foreignPublicKey) {
 		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		string getVariables = $"requestingUser={HttpUtility.UrlEncode(_personalPublicKey.ToBase64String())}&requestedUser={HttpUtility.UrlEncode(foreignPublicKey.ToBase64String())}&timestamp={timestamp}";
-		Response response = Http.Get($"https://...:5000/privateKeyRequest?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
+		Response response = Http.Get($"https://nockx.kbouma.nl:5000/privateKeyRequest?" + getVariables, [new Header { Name = "Signature", Value = Cryptography.Sign(timestamp.ToString(), _privateKey) }]);
 
 		return response.StatusCode == HttpStatusCode.OK;
 	}

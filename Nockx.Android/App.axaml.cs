@@ -11,16 +11,18 @@ using System.Diagnostics;
 namespace Nockx.Android;
 
 public partial class App : Avalonia.Application {
-	private bool _isKeyLoadedSuccessfully, _showKeyDecider;
+	private bool _isKeyLoadedSuccessfully;
 
 	public override void Initialize() {
+		if (!File.Exists(Path.Combine(Application.Context.FilesDir!.AbsolutePath, "key_selected")))
+			File.WriteAllText(Path.Combine(Application.Context.FilesDir!.AbsolutePath, "key_selected"), "false");
+
 		CheckOrGenerateKeys();
 		AvaloniaXamlLoader.Load(this);
 	}
 
 	private void CheckOrGenerateKeys() {
 		if (!File.Exists(Constants.PrivateKeyFile) && !File.Exists(Constants.PublicKeyFile)) {
-			_showKeyDecider = true;
 			// Generate RSA key
 			Stopwatch sw = Stopwatch.StartNew();
 			RsaKeyPairGenerator rsaGenerator = new ();
@@ -57,8 +59,10 @@ public partial class App : Avalonia.Application {
 
 	public override void OnFrameworkInitializationCompleted() {
 		if (ApplicationLifetime is ISingleViewApplicationLifetime singleView) {
-		//	if (_showKeyDecider)
-			singleView.MainView = new KeyDeciderView();
+			if (File.ReadAllText(Path.Combine(Application.Context.FilesDir!.AbsolutePath, "key_selected")).Trim() == "false")
+				singleView.MainView = new KeyDeciderView();
+			else
+				singleView.MainView = new MainView();
 		}
 
 		base.OnFrameworkInitializationCompleted();
